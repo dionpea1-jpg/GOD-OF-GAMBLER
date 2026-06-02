@@ -4,7 +4,7 @@
  */
 
 // Application Core State Storage Architecture
-let gameState = {
+let DEFAULT_GAME_STATE = {
     currentRound: 1,
     currentMatchIndex: 1,
     victoryTarget: 1000,
@@ -14,9 +14,11 @@ let gameState = {
         C: { name: 'Pemain C', score: 0, stars: 0, currentRoundBurn: 0, currentRoundTriple: 0 },
         D: { name: 'Pemain D', score: 0, stars: 0, currentRoundBurn: 0, currentRoundTriple: 0 }
     },
-    historyLog: [],       // Array objects representing log history data entries
-    permanentRegistry: {} // Permanent permanent player statistical archives tracker
+    historyLog: [],       
+    permanentRegistry: {} 
 };
+
+let gameState = JSON.parse(JSON.stringify(DEFAULT_GAME_STATE));
 
 // UI Speech Queue System Management Engine
 const audioSpeechQueue = {
@@ -47,12 +49,10 @@ const audioSpeechQueue = {
             this.processQueue();
         };
         audio.onerror = () => {
-            console.warn(`Audio source error or track absent: ${src}`);
             this.isSpeaking = false;
             this.processQueue();
         };
         audio.play().catch(err => {
-            console.log("Audio playback blocked by interaction model policies:", err);
             this.isSpeaking = false;
             this.processQueue();
         });
@@ -86,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
     runApplicationLoadingScreen();
     initializeInterfaceThemeSettings();
     bindUserInterfaceEventHandling();
+    injectFloatingResetButton(); // Memastikan tombol reset mengambang disuntikkan ke HTML
 });
 
 // App Splash Loading Engine Orchestrator
@@ -135,16 +136,61 @@ function loadSystemDataFromLocalStorage() {
     }
 }
 
+// Menambahkan Tombol Reset Mengambang (Floating Action Button) secara dinamis agar selalu terlihat
+function injectFloatingResetButton() {
+    if (document.getElementById("btn-floating-reset")) return;
+    
+    const fab = document.createElement("button");
+    fab.id = "btn-floating-reset";
+    fab.className = "fab-reset";
+    fab.innerHTML = "🔄";
+    fab.title = "Reset Semua Data Aplikasi";
+    
+    fab.addEventListener("click", executeFullApplicationWipeReset);
+    document.body.appendChild(fab);
+}
+
+// Reset Full Application Action Subsystem
+function executeFullApplicationWipeReset() {
+    if (confirm("PERINGATAN: Apakah Anda benar-benar yakin ingin menghapus seluruh data aplikasi? Tindakan ini akan mengosongkan semua Ronde, Skor, History, Achievement, dan seluruh Arsip Permanen Statistik Pemain secara permanen!")) {
+        // Hentikan TTS yang sedang berjalan agar tidak mengacaukan reset
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+        }
+        
+        localStorage.removeItem("SADEWA_CEKIH_STATE");
+        gameState = JSON.parse(JSON.stringify(DEFAULT_GAME_STATE));
+        
+        document.getElementById("player-a-name").value = "Pemain A";
+        document.getElementById("player-b-name").value = "Pemain B";
+        document.getElementById("player-c-name").value = "Pemain C";
+        document.getElementById("player-d-name").value = "Pemain D";
+        
+        document.querySelectorAll(".btn-target").forEach(b => b.classList.remove("active"));
+        const defaultTargetBtn = document.querySelector(".btn-target[data-value='1000']");
+        if (defaultTargetBtn) defaultTargetBtn.classList.add("add");
+        document.getElementById("input-target-custom").value = "";
+        
+        const keys = ['A', 'B', 'C', 'D'];
+        keys.forEach(k => {
+            document.getElementById(`input-score-${k}`).value = "";
+        });
+
+        saveSystemDataToLocalStorage();
+        refreshLiveGameStatsDashboard();
+        transitionViewRouterMode("setup-screen");
+        alert("Semua data aplikasi berhasil dibersihkan kembali ke pengaturan awal.");
+    }
+}
+
 // Synchronization Layer Infrastructure
 function syncStateDataToActiveInterface() {
-    // Synchronize global application setup configurations or active route matching templates
     if (gameState.historyLog && gameState.historyLog.length > 0) {
         transitionViewRouterMode("game-screen");
     } else {
         transitionViewRouterMode("setup-screen");
     }
     
-    // Inject custom target setups or preset nodes
     const targetCustomInput = document.getElementById("input-target-custom");
     const targetButtons = document.querySelectorAll(".btn-target");
     let isPresetFound = false;
@@ -162,7 +208,6 @@ function syncStateDataToActiveInterface() {
         targetCustomInput.value = gameState.victoryTarget;
     }
     
-    // Bind current internal data nodes to DOM elements
     document.getElementById("player-a-name").value = gameState.activePlayers.A.name;
     document.getElementById("player-b-name").value = gameState.activePlayers.B.name;
     document.getElementById("player-c-name").value = gameState.activePlayers.C.name;
@@ -181,16 +226,14 @@ function transitionViewRouterMode(screenId) {
 
 // User Interface Events Binding Architecture
 function bindUserInterfaceEventHandling() {
-    // Theme configurations buttons
     document.getElementById("btn-theme").addEventListener("click", toggleThemeEngine);
-    
-    // Fullscreen configuration API link
     document.getElementById("btn-fullscreen").addEventListener("click", toggleFullscreenEngine);
-    
-    // Screenshot engine activator
     document.getElementById("btn-screenshot").addEventListener("click", triggerApplicationScreenshot);
     
-    // Victory target picker selection layout
+    // Bind Application Reset lama (tetap aktif sebagai cadangan)
+    if(document.getElementById("btn-reset-app-setup")) document.getElementById("btn-reset-app-setup").addEventListener("click", executeFullApplicationWipeReset);
+    if(document.getElementById("btn-reset-app-game")) document.getElementById("btn-reset-app-game").addEventListener("click", executeFullApplicationWipeReset);
+    
     document.querySelectorAll(".btn-target").forEach(btn => {
         btn.addEventListener("click", (e) => {
             document.querySelectorAll(".btn-target").forEach(b => b.classList.remove("active"));
@@ -207,21 +250,14 @@ function bindUserInterfaceEventHandling() {
         }
     });
 
-    // Match initial triggers
     document.getElementById("btn-start-game").addEventListener("click", executeMatchInitialSetup);
-    
-    // Input action controls
     document.getElementById("btn-save-puteran").addEventListener("click", processMatchTurnCalculations);
-    
-    // Round control actions
     document.getElementById("btn-change-ronde").addEventListener("click", triggerRoundResetConfiguration);
     
-    // Name alteration modals interaction links
     document.getElementById("btn-edit-players").addEventListener("click", openNameModifierModal);
     document.getElementById("btn-cancel-edit").addEventListener("click", closeNameModifierModal);
     document.getElementById("btn-save-edit").addEventListener("click", commitNameModifierChanges);
     
-    // Navigation tab tracking selection nodes
     document.querySelectorAll(".tab-trigger").forEach(tabTrigger => {
         tabTrigger.addEventListener("click", (e) => {
             const container = e.target.closest(".tabs-container");
@@ -234,7 +270,6 @@ function bindUserInterfaceEventHandling() {
         });
     });
     
-    // Historic logs analytical tracking selectors
     document.getElementById("history-ronde-filter").addEventListener("change", (e) => {
         renderFilteredHistoryLogs(parseInt(e.target.value) || 1);
     });
@@ -272,16 +307,15 @@ function toggleThemeEngine() {
 function toggleFullscreenEngine() {
     if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(err => {
-            console.error(`Fullscreen request dynamic application error: ${err.message}`);
+            console.error(`Fullscreen error: ${err.message}`);
         });
     } else {
         document.exitFullscreen();
     }
 }
 
-// Screen Direct Render Image Capture Engine (Fallback Independent)
 function triggerApplicationScreenshot() {
-    alert("Fitur Screenshot Premium: Silakan gunakan kombinasi tombol bawaan HP Android Anda (Power + Volume Bawah) untuk hasil tangkapan layar beresolusi tinggi yang aman dan terintegrasi dengan galeri sistem.");
+    alert("Fitur Screenshot Premium: Silakan gunakan kombinasi tombol bawaan HP Anda (Power + Volume Bawah) untuk hasil tangkapan layar penuh.");
 }
 
 // Player Identity Mapping Modals Processing Engine
@@ -305,7 +339,6 @@ function commitNameModifierChanges() {
         if (inputVal) {
             const oldName = gameState.activePlayers[k].name;
             if (oldName !== inputVal) {
-                // Migrate statistical records tracking to avoid data leaks
                 synchronizePermanentRegistryNode(oldName);
                 gameState.activePlayers[k].name = inputVal;
                 synchronizePermanentRegistryNode(inputVal);
@@ -330,7 +363,6 @@ function executeMatchInitialSetup() {
     gameState.activePlayers.C.name = pC;
     gameState.activePlayers.D.name = pD;
     
-    // Reset structural round score counters explicitly
     const keys = ['A', 'B', 'C', 'D'];
     keys.forEach(k => {
         gameState.activePlayers[k].score = 0;
@@ -341,7 +373,6 @@ function executeMatchInitialSetup() {
     });
     
     gameState.currentMatchIndex = 1;
-    // Retain round structural metrics logic sequences
     
     saveSystemDataToLocalStorage();
     refreshLiveGameStatsDashboard();
@@ -353,7 +384,6 @@ function triggerRoundResetConfiguration() {
         gameState.currentRound += 1;
         gameState.currentMatchIndex = 1;
         
-        // Clear active score parameters without deleting player identity data matrices
         const keys = ['A', 'B', 'C', 'D'];
         keys.forEach(k => {
             gameState.activePlayers[k].score = 0;
@@ -419,7 +449,7 @@ function numberToBahasaIndonesia(num) {
     } else if (value < 1000000) {
         result += numberToBahasaIndonesia(Math.floor(value / 1000)) + " ribu " + numberToBahasaIndonesia(value % 1000);
     } else {
-        result += value.toString(); // Safety fallback boundary check
+        result += value.toString(); 
     }
     
     return result.trim().replace(/\s+/g, ' ');
@@ -430,7 +460,6 @@ function processMatchTurnCalculations() {
     const keys = ['A', 'B', 'C', 'D'];
     const additionInputs = {};
     
-    // Parse dynamic user inputs securely
     for (let i = 0; i < keys.length; i++) {
         const k = keys[i];
         const rawInput = document.getElementById(`input-score-${k}`).value;
@@ -443,7 +472,6 @@ function processMatchTurnCalculations() {
         additionInputs[k] = delta;
     }
     
-    // Capture snapshots of score matrices prior to iteration changes
     const previousScoresSnapshot = {
         A: gameState.activePlayers.A.score,
         B: gameState.activePlayers.B.score,
@@ -451,7 +479,6 @@ function processMatchTurnCalculations() {
         D: gameState.activePlayers.D.score
     };
     
-    // Map initial temporary dynamic post-calculation fields
     const postCalculationScores = {
         A: previousScoresSnapshot.A + additionInputs.A,
         B: previousScoresSnapshot.B + additionInputs.B,
@@ -459,32 +486,20 @@ function processMatchTurnCalculations() {
         D: previousScoresSnapshot.D + additionInputs.D
     };
     
-    // Core Engine Structural Tracking Logs Arrays
     const victimsBurnedThisTurn = [];
     let perpetratorKey = null;
     let burnSystemTriggeredThisTurn = false;
     
-    // Execute scoring evaluations algorithm starting from Match Index 2 onwards
     if (gameState.currentMatchIndex >= 2) {
-        
-        // Evaluate every permutation combination pairs structurally
         keys.forEach(pKey => {
             let directVictimsForThisPlayer = [];
             
             keys.forEach(oKey => {
                 if (pKey === oKey) return;
                 
-                // Exclude players who already sit at exactly 0 points from being processed as viable victims
-                if (previousScoresSnapshot.oKey === 0 || postCalculationScores[oKey] === 0) {
-                    // Score 0 target restriction rules block processing actions here
-                }
-                
-                // Extract parameters checking verification algorithms
-                // IF (previousScore <= opponentPreviousScore) AND (currentScore > opponentCurrentScore)
                 const conditionOne = previousScoresSnapshot[pKey] <= previousScoresSnapshot[oKey];
                 const conditionTwo = postCalculationScores[pKey] > postCalculationScores[oKey];
                 
-                // Apply strict exemption: zero elements cannot be evaluated as burnt casualties
                 const isOpponentNotZero = previousScoresSnapshot[oKey] !== 0;
                 
                 if (conditionOne && conditionTwo && isOpponentNotZero) {
@@ -492,7 +507,6 @@ function processMatchTurnCalculations() {
                 }
             });
             
-            // Track mapping to assign burn perpetrator context values
             if (directVictimsForThisPlayer.length > 0) {
                 burnSystemTriggeredThisTurn = true;
                 perpetratorKey = pKey; 
@@ -505,30 +519,23 @@ function processMatchTurnCalculations() {
         });
     }
     
-    // Apply burn adjustments if rules criteria match structural definitions
     if (burnSystemTriggeredThisTurn && victimsBurnedThisTurn.length > 0) {
         victimsBurnedThisTurn.forEach(vKey => {
-            // Target victim gets structural reset down to 0 points completely
             postCalculationScores[vKey] = 0;
-            
-            // Add statistics metrics
             gameState.activePlayers[vKey].currentRoundBurn += 1;
             updatePermanentRegistryMetrics(gameState.activePlayers[vKey].name, 0, 1, 0);
         });
         
-        // Handle specialized high-tier achievements matching Triple Burn conditions
         if (victimsBurnedThisTurn.length === 3 && perpetratorKey) {
             gameState.activePlayers[perpetratorKey].currentRoundTriple += 1;
             updatePermanentRegistryMetrics(gameState.activePlayers[perpetratorKey].name, 0, 0, 1);
         }
     }
     
-    // Commit temporary scores matrix back into the primary local application states
     keys.forEach(k => {
         gameState.activePlayers[k].score = postCalculationScores[k];
     });
     
-    // Scan variables to detect victory star achievements parameters
     let starEarnerKey = null;
     keys.forEach(k => {
         if (gameState.activePlayers[k].score >= gameState.victoryTarget) {
@@ -536,18 +543,15 @@ function processMatchTurnCalculations() {
         }
     });
     
-    // Handle actions if a player crosses threshold parameters to earn victory stars
     if (starEarnerKey) {
         gameState.activePlayers[starEarnerKey].stars += 1;
         updatePermanentRegistryMetrics(gameState.activePlayers[starEarnerKey].name, 1, 0, 0);
         
-        // Immediately trigger reset parameters on all local fields back to 0 points
         keys.forEach(k => {
             gameState.activePlayers[k].score = 0;
         });
     }
     
-    // Record log data models inside history object store arrays
     const historyEntry = {
         round: gameState.currentRound,
         puteran: gameState.currentMatchIndex,
@@ -570,28 +574,21 @@ function processMatchTurnCalculations() {
     
     gameState.historyLog.push(historyEntry);
     
-    // Execute system animation layers on top of visible application viewpoints
     triggerVisualOverlayAnimations(victimsBurnedThisTurn, starEarnerKey);
-    
-    // Construct automated speech output notifications
     buildSpeechSynthesizerSequence(historyEntry, previousScoresSnapshot);
     
-    // Progress structural match iteration tracking counts forwards by 1
     gameState.currentMatchIndex += 1;
     
-    // Clear old text fields inputs completely
     keys.forEach(k => {
         document.getElementById(`input-score-${k}`).value = "";
     });
     
-    // Re-render and save state shifts locally
     saveSystemDataToLocalStorage();
     refreshLiveGameStatsDashboard();
 }
 
 // Interactive Audio-Visual Graphics Core Automation Engine
 function triggerVisualOverlayAnimations(victims, starWinner) {
-    // 1. Handle negative point animation shifts
     const keys = ['A', 'B', 'C', 'D'];
     keys.forEach(k => {
         if (gameState.activePlayers[k].score < 0) {
@@ -599,13 +596,12 @@ function triggerVisualOverlayAnimations(victims, starWinner) {
             if (containerNode) {
                 containerNode.textContent = "👎";
                 containerNode.classList.remove("active");
-                void containerNode.offsetWidth; // Force reflow trigger
+                void containerNode.offsetWidth; 
                 containerNode.classList.add("active");
             }
         }
     });
     
-    // 2. Handle burn flame overlay animations
     if (victims && victims.length > 0) {
         const fireElement = document.getElementById("fire-overlay");
         if (fireElement) {
@@ -618,14 +614,12 @@ function triggerVisualOverlayAnimations(victims, starWinner) {
         }
     }
     
-    // 3. Handle high-tier reward star cascades
     if (starWinner) {
         const starContainer = document.getElementById("star-overlay");
         if (starContainer) {
             starContainer.innerHTML = "";
             starContainer.classList.add("active");
             
-            // Construct cascading visual particles dynamically
             for (let i = 0; i < 15; i++) {
                 const starParticle = document.createElement("div");
                 starParticle.className = "falling-star-particle";
@@ -645,7 +639,6 @@ function triggerVisualOverlayAnimations(victims, starWinner) {
 
 // Speech Automation Sequence Processing Factory
 function buildSpeechSynthesizerSequence(entry, snapshots) {
-    // Step A: Determine dealing rotation requirements based on score rankings prior to input calculations
     const keys = ['A', 'B', 'C', 'D'];
     let lowestScoreVal = Infinity;
     let dealerTargetName = "";
@@ -657,10 +650,8 @@ function buildSpeechSynthesizerSequence(entry, snapshots) {
         }
     });
     
-    // Queue internal card dealing announcer prompts
     audioSpeechQueue.addToQueue('tts', `Silakan ${dealerTargetName} kocok kartunya`);
     
-    // Step B: Evaluate burn announcements
     if (entry.burnDetails) {
         if (entry.burnDetails.isTriple) {
             audioSpeechQueue.addToQueue('tts', "Triple Burn");
@@ -668,17 +659,25 @@ function buildSpeechSynthesizerSequence(entry, snapshots) {
         
         const victimsText = entry.burnDetails.victims.join(" dan ");
         audioSpeechQueue.addToQueue('tts', `${entry.burnDetails.perpetrator} membakar ${victimsText}`);
-        // Inject structural audio tracks
         audioSpeechQueue.addToQueue('audio', 'dimulaidari0.wav');
     }
     
-    // Step C: Evaluate reward star configurations announcements
+    // PERBAIKAN UTAMA: Jika dapet bintang, jalankan lagu & TTS secara lepas di luar antrean agar benar-benar BARENGAN
     if (entry.starAwarded) {
-        audioSpeechQueue.addToQueue('tts', `Selamat kepada ${entry.starAwarded.player} mendapatkan bintang satu`);
-        audioSpeechQueue.addToQueue('audio', 'godofgambler.wav');
+        // 1. Play Musik secara instan lepas
+        const starAudio = new Audio('godofgambler.wav');
+        starAudio.play().catch(e => console.log("Blocked audio play:", e));
+
+        // 2. Mainkan TTS secara instan lepas di luar object queue utama
+        if ('speechSynthesis' in window) {
+            const starUtterance = new SpeechSynthesisUtterance(`Selamat kepada ${entry.starAwarded.player} mendapatkan bintang satu`);
+            starUtterance.lang = 'id-ID';
+            starUtterance.rate = 0.95;
+            window.speechSynthesis.speak(starUtterance);
+        }
     }
     
-    // Step D: Report scoreboard positions globally across all active nodes
+    // Antrean pembacaan sisa skor berjalan normal setelah pemicu instan di atas
     keys.forEach(k => {
         const p = gameState.activePlayers[k];
         const spokenScore = numberToBahasaIndonesia(p.score);
@@ -693,21 +692,17 @@ function buildSpeechSynthesizerSequence(entry, snapshots) {
 
 // User Interface Update and Synchronization Subsystem
 function refreshLiveGameStatsDashboard() {
-    // 1. Update text displays
     document.getElementById("display-ronde").textContent = `Ronde ${gameState.currentRound}`;
     document.getElementById("display-puteran").textContent = `Puteran ${gameState.currentMatchIndex}`;
     document.getElementById("display-target").textContent = `Target: ${gameState.victoryTarget}`;
     
-    // 2. Refresh active panel tracking labels
     const keys = ['A', 'B', 'C', 'D'];
     keys.forEach(k => {
         const p = gameState.activePlayers[k];
         
-        // Form input labels tracking
         document.getElementById(`lbl-entry-${k}`).textContent = p.name;
         document.getElementById(`lbl-edit-${k}`).textContent = p.name;
         
-        // Interactive scoreboard cards
         const cardTitle = document.querySelector(`.player-display-name[data-id="${k}"]`);
         if (cardTitle) cardTitle.textContent = p.name;
         
@@ -717,19 +712,16 @@ function refreshLiveGameStatsDashboard() {
         const cardStars = cardScore.closest(".player-card").querySelector(".star-count");
         if (cardStars) cardStars.textContent = `⭐ ${p.stars}`;
         
-        // Mini statistics trackers
         document.getElementById(`stat-burn-${k}`).textContent = p.currentRoundBurn;
         document.getElementById(`stat-triple-${k}`).textContent = p.currentRoundTriple;
     });
     
-    // 3. Compute live standing rankings dynamically
     const sortedPlayers = keys.map(k => ({ key: k, ...gameState.activePlayers[k] }))
         .sort((x, y) => {
             if (y.stars !== x.stars) return y.stars - x.stars;
             return y.score - x.score;
         });
         
-    // Apply leaderboard styling parameters onto dashboard nodes
     keys.forEach(k => {
         const cardElement = document.querySelector(`.player-card[data-player="${k}"]`);
         if (cardElement) {
@@ -742,7 +734,6 @@ function refreshLiveGameStatsDashboard() {
         }
     });
     
-    // Render dynamic data across tabular sub-screens
     renderRankingTable(sortedPlayers);
     rebuildHistoryRoundSelectorOptions();
     renderFilteredHistoryLogs(gameState.currentRound);
@@ -772,7 +763,6 @@ function rebuildHistoryRoundSelectorOptions() {
     const selectFilter = document.getElementById("history-ronde-filter");
     if (!selectFilter) return;
     
-    // Extract unique active round integers from logs array data store
     const totalRoundsTracked = Math.max(gameState.currentRound, ...gameState.historyLog.map(l => l.round), 1);
     
     const previousSelectionValue = selectFilter.value;
@@ -804,7 +794,6 @@ function renderFilteredHistoryLogs(roundId) {
         return;
     }
     
-    // Invert arrays ordering logic to map fresh entries directly to the top edge area
     filtered.slice().reverse().forEach(log => {
         const logItem = document.createElement("div");
         logItem.className = "log-item";
@@ -858,7 +847,6 @@ function renderAchievementsScreen() {
         }
     });
     
-    // Card 1 Layout Model: General Triple Burn achievement specs
     const tripleCard = document.createElement("div");
     tripleCard.className = "achievement-card";
     tripleCard.innerHTML = `
@@ -870,7 +858,6 @@ function renderAchievementsScreen() {
     `;
     container.appendChild(tripleCard);
     
-    // Card 2 Layout Model: General God of Gamblers achievement specs
     let maxStars = 0;
     let starKings = [];
     keys.forEach(k => {
