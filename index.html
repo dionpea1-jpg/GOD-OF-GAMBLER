@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Score Cekih by Sadewa Corp</title>
+    <meta name="theme-color" content="#0a0f1d">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="classic-192.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-mode">
+
+    <div id="loading-screen" class="loading-screen">
+        <div class="loading-content">
+            <img src="classic-512.png" alt="Logo Sadewa Corp" class="logo-premium logo-anim">
+            <h1 class="brand-title">Score Cekih</h1>
+            <p class="brand-subtitle">by Sadewa Corp</p>
+            <div class="loading-bar-container">
+                <div id="loading-bar" class="loading-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="fire-overlay" class="fire-overlay">
+        <div class="fire-particles"></div>
+    </div>
+
+    <div id="star-overlay" class="star-overlay"></div>
+
+    <div class="app-container">
+        
+        <header class="app-header">
+            <div class="header-main">
+                <img src="classic-512.png" alt="Mini Logo" class="header-logo">
+                <div class="header-titles">
+                    <h2>Score Cekih</h2>
+                    <span>Sadewa Corp</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button id="btn-fullscreen" class="icon-btn" title="Fullscreen">📱</button>
+                <button id="btn-theme" class="icon-btn" title="Ubah Tema">🌙</button>
+                <button id="btn-screenshot" class="icon-btn" title="Ambil Gambar">📸</button>
+            </div>
+        </header>
+
+        <main id="setup-screen" class="screen-content active">
+            <div class="card premium-card">
+                <h3>Konfigurasi Game Baru</h3>
+                <div class="form-group">
+                    <label>Target Kemenangan</label>
+                    <div class="target-options">
+                        <button type="button" class="btn-target" data-value="500">500</button>
+                        <button type="button" class="btn-target" data-value="750">750</button>
+                        <button type="button" class="btn-target active" data-value="1000">1000</button>
+                        <button type="button" class="btn-target" data-value="1500">1500</button>
+                        <input type="number" id="input-target-custom" placeholder="Kustom..." class="form-control input-custom-target">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Nama Pemain A</label>
+                    <input type="text" id="player-a-name" class="form-control" value="Pemain A">
+                </div>
+                <div class="form-group">
+                    <label>Nama Pemain B</label>
+                    <input type="text" id="player-b-name" class="form-control" value="Pemain B">
+                </div>
+                <div class="form-group">
+                    <label>Nama Pemain C</label>
+                    <input type="text" id="player-c-name" class="form-control" value="Pemain C">
+                </div>
+                <div class="form-group">
+                    <label>Nama Pemain D</label>
+                    <input type="text" id="player-d-name" class="form-control" value="Pemain D">
+                </div>
+
+                <button id="btn-start-game" class="btn btn-primary btn-block">MULAI PERMAINAN</button>
+            </div>
+        </main>
+
+        <main id="game-screen" class="screen-content">
+            
+            <div class="game-meta-row">
+                <div class="meta-info">
+                    <span id="display-ronde" class="badge">Ronde 1</span>
+                    <span id="display-puteran" class="badge">Puteran 1</span>
+                    <span id="display-target" class="badge badge-target">Target: 1000</span>
+                </div>
+                <div class="meta-actions">
+                    <button id="btn-edit-players" class="btn btn-sm btn-secondary">✏️ Edit Nama</button>
+                    <button id="btn-change-ronde" class="btn btn-sm btn-danger">GANTI RONDE</button>
+                </div>
+            </div>
+
+            <div id="player-cards-grid" class="player-cards-grid">
+                <div class="player-card card" data-player="A">
+                    <div class="card-rank-badge">#1</div>
+                    <div class="card-player-header">
+                        <h4 class="player-display-name" data-id="A">Pemain A</h4>
+                        <span class="star-count">⭐ 0</span>
+                    </div>
+                    <div class="score-display-wrapper">
+                        <div class="score-number" id="score-val-A">0</div>
+                        <div class="negative-anim-zone" id="neg-anim-A"></div>
+                    </div>
+                    <div class="player-mini-stats">
+                        <span>Burn: <b id="stat-burn-A">0</b></span>
+                        <span>Triple: <b id="stat-triple-A">0</b></span>
+                    </div>
+                </div>
+                <div class="player-card card" data-player="B">
+                    <div class="card-rank-badge">#2</div>
+                    <div class="card-player-header">
+                        <h4 class="player-display-name" data-id="B">Pemain B</h4>
+                        <span class="star-count">⭐ 0</span>
+                    </div>
+                    <div class="score-display-wrapper">
+                        <div class="score-number" id="score-val-B">0</div>
+                        <div class="negative-anim-zone" id="neg-anim-B"></div>
+                    </div>
+                    <div class="player-mini-stats">
+                        <span>Burn: <b id="stat-burn-B">0</b></span>
+                        <span>Triple: <b id="stat-triple-B">0</b></span>
+                    </div>
+                </div>
+                <div class="player-card card" data-player="C">
+                    <div class="card-rank-badge">#3</div>
+                    <div class="card-player-header">
+                        <h4 class="player-display-name" data-id="C">Pemain C</h4>
+                        <span class="star-count">⭐ 0</span>
+                    </div>
+                    <div class="score-display-wrapper">
+                        <div class="score-number" id="score-val-C">0</div>
+                        <div class="negative-anim-zone" id="neg-anim-C"></div>
+                    </div>
+                    <div class="player-mini-stats">
+                        <span>Burn: <b id="stat-burn-C">0</b></span>
+                        <span>Triple: <b id="stat-triple-C">0</b></span>
+                    </div>
+                </div>
+                <div class="player-card card" data-player="D">
+                    <div class="card-rank-badge">#4</div>
+                    <div class="card-player-header">
+                        <h4 class="player-display-name" data-id="D">Pemain D</h4>
+                        <span class="star-count">⭐ 0</span>
+                    </div>
+                    <div class="score-display-wrapper">
+                        <div class="score-number" id="score-val-D">0</div>
+                        <div class="negative-anim-zone" id="neg-anim-D"></div>
+                    </div>
+                    <div class="player-mini-stats">
+                        <span>Burn: <b id="stat-burn-D">0</b></span>
+                        <span>Triple: <b id="stat-triple-D">0</b></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card entry-card premium-card">
+                <h3>Input Penambahan Skor</h3>
+                <div class="entry-grid">
+                    <div class="entry-row">
+                        <label id="lbl-entry-A" for="input-score-A">Pemain A</label>
+                        <input type="number" id="input-score-A" class="form-control input-score-val" placeholder="0" pattern="-?[0-9]*">
+                    </div>
+                    <div class="entry-row">
+                        <label id="lbl-entry-B" for="input-score-B">Pemain B</label>
+                        <input type="number" id="input-score-B" class="form-control input-score-val" placeholder="0" pattern="-?[0-9]*">
+                    </div>
+                    <div class="entry-row">
+                        <label id="lbl-entry-C" for="input-score-C">Pemain C</label>
+                        <input type="number" id="input-score-C" class="form-control input-score-val" placeholder="0" pattern="-?[0-9]*">
+                    </div>
+                    <div class="entry-row">
+                        <label id="lbl-entry-D" for="input-score-D">Pemain D</label>
+                        <input type="number" id="input-score-D" class="form-control input-score-val" placeholder="0" pattern="-?[0-9]*">
+                    </div>
+                </div>
+                <button id="btn-save-puteran" class="btn btn-success btn-block mt-3">SIMPAN PUTERAN</button>
+            </div>
+
+            <div class="tabs-container">
+                <div class="tabs-navigation">
+                    <button class="tab-trigger active" data-target="tab-ranking">Ranking</button>
+                    <button class="tab-trigger" data-target="tab-history">History</button>
+                    <button class="tab-trigger" data-target="tab-achievement">Achievement</button>
+                    <button class="tab-trigger" data-target="tab-statistik">Statistik</button>
+                    <button class="tab-trigger" data-target="tab-arsip">Arsip Pemain</button>
+                </div>
+                
+                <div class="tabs-viewport">
+                    <div id="tab-ranking" class="tab-content active">
+                        <div class="table-responsive">
+                            <table class="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Pos</th>
+                                        <th>Nama</th>
+                                        <th>Skor</th>
+                                        <th>Bintang</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ranking-table-body">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-history" class="tab-content">
+                        <div class="history-selector-wrapper">
+                            <label for="history-ronde-filter" class="mr-2">Pilih Ronde:</label>
+                            <select id="history-ronde-filter" class="form-control select-sm"></select>
+                        </div>
+                        <div id="history-logs" class="history-logs-container">
+                            </div>
+                    </div>
+
+                    <div id="tab-achievement" class="tab-content">
+                        <div id="achievement-list" class="achievement-grid">
+                            </div>
+                    </div>
+
+                    <div id="tab-statistik" class="tab-content">
+                        <div class="table-responsive">
+                            <table class="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Pemain</th>
+                                        <th>Bintang Terkumpul</th>
+                                        <th>Total Dibakar</th>
+                                        <th>Triple Burn</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="statistik-table-body">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-arsip" class="tab-content">
+                        <p class="tab-info-text">Arsip permanen data statistik semua pemain sepanjang sejarah aplikasi:</p>
+                        <div class="table-responsive">
+                            <table class="premium-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nama Pemain</th>
+                                        <th>Bintang</th>
+                                        <th>Total Burn</th>
+                                        <th>Triple Burn</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="arsip-table-body">
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <div id="edit-name-modal" class="modal-overlay">
+            <div class="modal-card card premium-card">
+                <h3>Ubah Nama Pemain Aktif</h3>
+                <div class="form-group">
+                    <label id="lbl-edit-A">Pemain A</label>
+                    <input type="text" id="edit-name-A" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label id="lbl-edit-B">Pemain B</label>
+                    <input type="text" id="edit-name-B" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label id="lbl-edit-C">Pemain C</label>
+                    <input type="text" id="edit-name-C" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label id="lbl-edit-D">Pemain D</label>
+                    <input type="text" id="edit-name-D" class="form-control">
+                </div>
+                <div class="modal-actions-row">
+                    <button id="btn-cancel-edit" class="btn btn-secondary">Batal</button>
+                    <button id="btn-save-edit" class="btn btn-primary">Simpan Perubahan</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
